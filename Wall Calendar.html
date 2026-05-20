@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wall Calendar — 5 directions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+  #root { height: 100vh; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="v1-classic.jsx"></script>
+<script type="text/babel" src="v2-poster.jsx"></script>
+<script type="text/babel" src="v3-editorial.jsx"></script>
+<script type="text/babel" src="v4-river.jsx"></script>
+<script type="text/babel" src="v5-terminal.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const W = 540, H = 960; // 9:16 portrait — half-res of a 1080×1920 wall TV
+
+function Frame({ Component }) {
+  // Each artboard is a fixed 540×960 portrait. Components render full-bleed.
+  return (
+    <div style={{ width: W, height: H, position: 'relative', overflow: 'hidden' }}>
+      <Component />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection
+        id="wall-cal"
+        title="Wall Calendar — 5 directions"
+        subtitle="Portrait 9:16 (1080×1920). Live clock. Tap any event for detail."
+        gap={56}
+      >
+        <DCArtboard id="v1" label="01 · Classic Agenda" width={W} height={H}>
+          <Frame Component={window.V1ClassicAgenda} />
+        </DCArtboard>
+        <DCArtboard id="v2" label="02 · Now & Next" width={W} height={H}>
+          <Frame Component={window.V2NowNext} />
+        </DCArtboard>
+        <DCArtboard id="v3" label="03 · Editorial" width={W} height={H}>
+          <Frame Component={window.V3Editorial} />
+        </DCArtboard>
+        <DCArtboard id="v4" label="04 · Time River" width={W} height={H}>
+          <Frame Component={window.V4TimeRiver} />
+        </DCArtboard>
+        <DCArtboard id="v5" label="05 · Terminal" width={W} height={H}>
+          <Frame Component={window.V5Terminal} />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

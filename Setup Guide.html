@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Wall Calendar — Setup Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c1015;
+    --panel: #11161d;
+    --panel2: #0e131a;
+    --rule: rgba(255,255,255,0.07);
+    --fg: #eaeef5;
+    --mid: #8a98ac;
+    --dim: rgba(234,238,245,0.62);
+    --faint: rgba(234,238,245,0.32);
+    --accent: #6cc7c0;
+    --warn: #e6b450;
+    --ok: #7dd181;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  body { line-height: 1.55; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 64px 32px 120px; }
+  header { padding-bottom: 32px; border-bottom: 1px solid var(--rule); margin-bottom: 40px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 2px; font-weight: 600; text-transform: uppercase; }
+  h1 { font-size: 44px; font-weight: 700; letter-spacing: -1.4px; margin: 12px 0 8px; line-height: 1.05; }
+  .lede { color: var(--dim); font-size: 17px; max-width: 600px; }
+
+  /* steps */
+  .step { margin: 56px 0 0; }
+  .step-header { display: flex; align-items: baseline; gap: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--rule); margin-bottom: 22px; }
+  .step-num { font-family: var(--mono); font-size: 14px; color: var(--accent); letter-spacing: 1.5px; font-weight: 700; }
+  .step-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; }
+  .step-sub { font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: 1.5px; margin-left: auto; }
+
+  h3 { font-size: 16px; font-weight: 700; margin: 28px 0 10px; letter-spacing: -0.2px; }
+  p { margin: 10px 0; color: var(--dim); }
+  p strong, li strong { color: var(--fg); font-weight: 600; }
+  ol, ul { margin: 12px 0; padding-left: 20px; color: var(--dim); }
+  ol li, ul li { margin: 8px 0; }
+  ol { counter-reset: olc; list-style: none; padding-left: 0; }
+  ol > li { counter-increment: olc; position: relative; padding-left: 32px; }
+  ol > li::before { content: counter(olc); position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: 11px; color: var(--accent); width: 22px; height: 22px; border: 1px solid var(--accent); border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; font-weight: 600; }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(108,199,192,0.3); }
+  a:hover { border-bottom-color: var(--accent); }
+
+  /* code */
+  code { font-family: var(--mono); font-size: 13px; background: var(--panel2); padding: 2px 6px; border-radius: 3px; color: var(--fg); border: 1px solid var(--rule); }
+  pre { font-family: var(--mono); font-size: 12.5px; background: var(--panel2); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; overflow-x: auto; line-height: 1.55; color: var(--fg); margin: 16px 0; }
+  pre .c { color: var(--mid); } /* comment */
+  pre .k { color: var(--accent); } /* keyword */
+  pre .s { color: #c8e6c9; } /* string */
+
+  /* callouts */
+  .callout { display: flex; gap: 14px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--rule); border-left: 3px solid var(--accent); border-radius: 4px; margin: 18px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; font-weight: 700; color: var(--accent); padding-top: 3px; flex-shrink: 0; }
+  .callout.warn .callout-tag { color: var(--warn); }
+  .callout.ok .callout-tag { color: var(--ok); }
+  .callout p { margin: 0; color: var(--fg); font-size: 14px; }
+  .callout p + p { margin-top: 8px; color: var(--dim); }
+
+  /* diagram */
+  .arch { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0; align-items: stretch; margin: 24px 0; }
+  .arch-box { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 12px; text-align: center; }
+  .arch-box .l { font-family: var(--mono); font-size: 9.5px; color: var(--accent); letter-spacing: 1.5px; font-weight: 600; }
+  .arch-box .n { font-size: 14px; font-weight: 600; margin-top: 4px; letter-spacing: -0.2px; }
+  .arch-box .d { font-size: 11px; color: var(--dim); margin-top: 4px; line-height: 1.35; }
+  .arch-arrow { display: flex; align-items: center; justify-content: center; color: var(--faint); font-family: var(--mono); font-size: 18px; padding: 0 6px; }
+
+  /* TOC */
+  .toc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin: 24px 0 8px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; }
+  .toc a { display: flex; gap: 10px; border: none; color: var(--fg); font-size: 13.5px; padding: 4px 0; }
+  .toc a:hover { color: var(--accent); }
+  .toc-num { font-family: var(--mono); color: var(--faint); font-size: 11px; padding-top: 2px; flex-shrink: 0; width: 18px; }
+
+  footer { margin-top: 80px; padding-top: 32px; border-top: 1px solid var(--rule); color: var(--faint); font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 32px 20px 80px; }
+    h1 { font-size: 32px; }
+    .arch { grid-template-columns: 1fr; }
+    .arch-arrow { padding: 6px 0; transform: rotate(90deg); }
+    .toc { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">[ DEPLOY · GUIDE ]</div>
+  <h1>Wall Calendar — Setup</h1>
+  <p class="lede">Old Windows laptop → portrait-mounted TV → live Google Calendar. About 60–90 minutes of setup, then it runs forever.</p>
+</header>
+
+<section>
+  <h3 style="margin-top: 0">The architecture</h3>
+  <p>Three pieces, in this order:</p>
+  <div class="arch">
+    <div class="arch-box">
+      <div class="l">CLOUD</div>
+      <div class="n">The design</div>
+      <div class="d">Hosted on Vercel (free). Where you'll push updates from.</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="l">CLOUD</div>
+      <div class="n">Calendar proxy</div>
+      <div class="d">A tiny serverless function. Fetches your Google iCal feed every few minutes, returns it to the page.</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="l">YOUR HOUSE</div>
+      <div class="n">Kiosk laptop</div>
+      <div class="d">Windows, fullscreen Chrome, autoboots on power-up. Never sleeps.</div>
+    </div>
+  </div>
+  <p>The laptop just renders a webpage. All the smarts live in the cloud — which means you can change the design or the calendar from anywhere without touching the laptop again.</p>
+
+  <div class="toc">
+    <a href="#step1"><span class="toc-num">01</span> Put the design online</a>
+    <a href="#step2"><span class="toc-num">02</span> Connect your Google Calendar</a>
+    <a href="#step3"><span class="toc-num">03</span> Prepare the Windows laptop</a>
+    <a href="#step4"><span class="toc-num">04</span> Kiosk mode + autoboot</a>
+    <a href="#step5"><span class="toc-num">05</span> Mount + go</a>
+    <a href="#next"><span class="toc-num">→</span> What's next from me</a>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step1">
+  <div class="step-header">
+    <span class="step-num">STEP 01</span>
+    <h2 class="step-title">Put the design online</h2>
+    <span class="step-sub">~15 MIN</span>
+  </div>
+
+  <p>The design is currently just HTML files in this project. We'll deploy them to <a href="https://vercel.com" target="_blank">Vercel</a> — it's free, takes 5 minutes, and gives you a URL like <code>calendar-yourname.vercel.app</code>.</p>
+
+  <ol>
+    <li><strong>Sign up for Vercel</strong> with your GitHub account (or email).</li>
+    <li><strong>Export this project</strong> as a zip from this app's menu, unzip it on your computer.</li>
+    <li>In Vercel, click <strong>"Add New… → Project"</strong>, then <strong>"Import from local"</strong>, and drag the unzipped folder in.</li>
+    <li>When asked which file to serve, pick <code>Wall Calendar v3.html</code> — or rename it to <code>index.html</code> first so Vercel finds it automatically.</li>
+    <li>Click <strong>Deploy</strong>. ~30 seconds later you'll get your URL.</li>
+  </ol>
+
+  <div class="callout ok">
+    <span class="callout-tag">WHY</span>
+    <div>
+      <p>You could also just open the HTML file directly on the laptop via <code>file:///</code>, but hosting it means: (a) the calendar proxy in step 2 can talk to it, (b) you can update the design from anywhere, (c) the laptop only needs Chrome and a URL.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step2">
+  <div class="step-header">
+    <span class="step-num">STEP 02</span>
+    <h2 class="step-title">Connect your Google Calendar</h2>
+    <span class="step-sub">~25 MIN</span>
+  </div>
+
+  <p>We're going to use Google Calendar's <strong>private iCal feed</strong> — a secret URL that contains all your events. We don't use the full Google API because it requires OAuth, and OAuth on a kiosk display is a hassle. The iCal feed is simpler and updates every few hours, which is fine for a wall display.</p>
+
+  <h3>2a · Grab your private iCal URL</h3>
+  <ol>
+    <li>Open <a href="https://calendar.google.com" target="_blank">Google Calendar</a> on a computer.</li>
+    <li>Hover the calendar you want in the left sidebar → <strong>⋮ → Settings and sharing</strong>.</li>
+    <li>Scroll to <strong>"Integrate calendar"</strong>.</li>
+    <li>Copy the <strong>"Secret address in iCal format"</strong>. It looks like <code>https://calendar.google.com/calendar/ical/…/private-abc123/basic.ics</code>.</li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="callout-tag">HEADS UP</span>
+    <div>
+      <p>This URL is a <strong>password</strong>. Anyone who has it can see all your events. Don't paste it into the HTML, don't commit it to GitHub. It goes into the serverless function as an environment variable (next step), where only Vercel can read it.</p>
+    </div>
+  </div>
+
+  <h3>2b · Add a tiny proxy function</h3>
+  <p>Google's iCal endpoint doesn't allow browsers to fetch it directly (CORS). So we put a 30-line serverless function on Vercel that fetches it on the server side and hands it to the page as JSON.</p>
+
+  <p>In your project folder, create <code>api/events.js</code>:</p>
+  <pre><span class="c">// api/events.js — runs on Vercel as a serverless function.</span>
+<span class="c">// Reads your secret iCal URL from env, returns parsed events as JSON.</span>
+<span class="k">import</span> ical <span class="k">from</span> <span class="s">'node-ical'</span>;
+
+<span class="k">export default async function</span> handler(req, res) {
+  <span class="k">try</span> {
+    <span class="k">const</span> data = <span class="k">await</span> ical.async.fromURL(process.env.GCAL_ICS_URL);
+    <span class="k">const</span> events = Object.values(data)
+      .filter((e) =&gt; e.type === <span class="s">'VEVENT'</span>)
+      .map((e) =&gt; ({
+        id: e.uid,
+        title: e.summary,
+        loc: e.location || <span class="s">''</span>,
+        start: e.start.toISOString(),
+        end: e.end.toISOString(),
+      }));
+    res.setHeader(<span class="s">'Cache-Control'</span>, <span class="s">'s-maxage=300'</span>); <span class="c">// cache 5 min</span>
+    res.status(200).json({ events });
+  } <span class="k">catch</span> (err) {
+    res.status(500).json({ error: err.message });
+  }
+}</pre>
+
+  <p>And a one-line <code>package.json</code>:</p>
+  <pre>{ <span class="s">"dependencies"</span>: { <span class="s">"node-ical"</span>: <span class="s">"^0.18.0"</span> } }</pre>
+
+  <h3>2c · Set the secret URL in Vercel</h3>
+  <ol>
+    <li>Vercel project → <strong>Settings → Environment Variables</strong>.</li>
+    <li>Add <code>GCAL_ICS_URL</code> = your secret iCal URL.</li>
+    <li>Redeploy. Your function is now live at <code>https://your-site.vercel.app/api/events</code> — visit it to see today's events as JSON.</li>
+  </ol>
+
+  <h3>2d · I'll wire the page to this</h3>
+  <p>When you've done the above, send me your Vercel URL. I'll swap the sample <code>CAL_DATA.events</code> in the design for a live fetch from <code>/api/events</code>, polled every 5 minutes, with proper handling of all-day events, multi-day events, and a graceful "couldn't reach the calendar" state.</p>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step3">
+  <div class="step-header">
+    <span class="step-num">STEP 03</span>
+    <h2 class="step-title">Prepare the Windows laptop</h2>
+    <span class="step-sub">~15 MIN</span>
+  </div>
+
+  <h3>3a · Rotate the display to portrait</h3>
+  <ol>
+    <li>Plug the laptop into the TV via HDMI. Mount the TV vertically.</li>
+    <li>Right-click the desktop → <strong>Display settings</strong>.</li>
+    <li>Select the TV display → <strong>Display orientation → Portrait</strong>.</li>
+    <li>Set the TV as the <strong>main display</strong>, and "Show only on" the TV if you want the laptop's screen off.</li>
+  </ol>
+
+  <h3>3b · Never sleep, never lock</h3>
+  <ol>
+    <li><strong>Power Options</strong> → set both "Plugged in" sliders to <strong>Never</strong> (turn off the display, put to sleep).</li>
+    <li><strong>Advanced power settings</strong> → "When I close the lid" → <strong>Do nothing</strong> (so you can fold the laptop behind the TV).</li>
+    <li><strong>Lock screen</strong> settings → screen timeout = <strong>Never</strong>.</li>
+    <li><strong>Windows Update</strong> → set active hours to a wide range so it doesn't reboot mid-day. Schedule restarts overnight if possible.</li>
+  </ol>
+
+  <h3>3c · Install Chrome</h3>
+  <p>Standard <a href="https://www.google.com/chrome/" target="_blank">Chrome</a> install. We use it instead of Edge because the kiosk flags are well-documented.</p>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step4">
+  <div class="step-header">
+    <span class="step-num">STEP 04</span>
+    <h2 class="step-title">Kiosk mode + autoboot</h2>
+    <span class="step-sub">~10 MIN</span>
+  </div>
+
+  <h3>4a · Make a launcher batch file</h3>
+  <p>Create <code>C:\WallCalendar\launch.bat</code>:</p>
+  <pre><span class="c">@echo off</span>
+<span class="c">REM Wait a few seconds for network on boot</span>
+timeout /t 10 /nobreak &gt; nul
+
+<span class="c">REM Launch Chrome in kiosk mode pointing at your Vercel URL</span>
+start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" ^
+  --kiosk ^
+  --noerrdialogs ^
+  --disable-infobars ^
+  --disable-session-crashed-bubble ^
+  --disable-features=TranslateUI ^
+  --no-first-run ^
+  --start-fullscreen ^
+  --incognito ^
+  "https://your-site.vercel.app"</pre>
+
+  <p>Replace the URL with your actual Vercel URL. Test it: double-click <code>launch.bat</code> — Chrome should pop up fullscreen with no chrome (no URL bar, no tabs).</p>
+
+  <h3>4b · Auto-launch on Windows boot</h3>
+  <ol>
+    <li>Press <strong>Win + R</strong>, type <code>shell:startup</code>, hit Enter.</li>
+    <li>Right-click in the folder that opens → <strong>New → Shortcut</strong> → point at your <code>launch.bat</code>.</li>
+    <li>Restart the laptop to test. It should auto-log-in to the desktop, wait 10 seconds, and launch the calendar fullscreen.</li>
+  </ol>
+
+  <h3>4c · Auto-login on boot</h3>
+  <p>By default Windows asks for a password on startup. To skip it:</p>
+  <ol>
+    <li>Press <strong>Win + R</strong>, type <code>netplwiz</code>, hit Enter.</li>
+    <li>Uncheck <strong>"Users must enter a user name and password to use this computer"</strong>.</li>
+    <li>Enter your account password to confirm.</li>
+  </ol>
+  <div class="callout warn">
+    <span class="callout-tag">SECURITY</span>
+    <div>
+      <p>This means anyone with physical access to the laptop is logged in. Fine for a wall display behind a TV; not fine for a laptop you carry around. Don't enable this on a laptop you also use for work or personal stuff.</p>
+    </div>
+  </div>
+
+  <h3>4d · Hide the mouse cursor</h3>
+  <p>Chrome's kiosk mode auto-hides the cursor after ~3 seconds of inactivity. If you want it gone entirely, install <a href="https://github.com/oblitum/AutoHideMouseCursor" target="_blank">AutoHideMouseCursor</a> (free, tiny, set delay to 1 second).</p>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step5">
+  <div class="step-header">
+    <span class="step-num">STEP 05</span>
+    <h2 class="step-title">Mount + go</h2>
+    <span class="step-sub">~30 MIN PHYSICAL</span>
+  </div>
+
+  <ol>
+    <li>Mount the TV portrait. A standard VESA mount usually rotates; or use a third-party portrait mount.</li>
+    <li>Run the laptop's power cable to a wall outlet — ideally one not on a switched circuit.</li>
+    <li>Plug the laptop in, plug the HDMI in. Fold the laptop closed.</li>
+    <li>Power on. ~20 seconds later: the calendar.</li>
+  </ol>
+
+  <div class="callout ok">
+    <span class="callout-tag">PRO TIP</span>
+    <div>
+      <p>Put both the laptop and TV on a smart plug. If the calendar ever wedges (Chrome crashes, Windows updates do something weird), you can power-cycle the whole thing remotely from your phone.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="next">
+  <div class="step-header">
+    <span class="step-num">NEXT</span>
+    <h2 class="step-title">What I'll handle when you're ready</h2>
+    <span class="step-sub">FROM ME</span>
+  </div>
+
+  <p>Tell me when you've done steps 1 and 2 (or want me to walk you through any part). Then I'll:</p>
+  <ul>
+    <li>Wire the design to fetch real events from your <code>/api/events</code> endpoint, with polling, error handling, and a "stale" badge if it can't reach the calendar</li>
+    <li>Handle the calendar shape mismatches: all-day events, multi-day events, events outside the 7am–10pm window (today's design assumes a tidy work-day shape)</li>
+    <li>Add gap states — empty morning, end of day, "nothing scheduled"</li>
+    <li>Add a small diagnostics overlay (last-sync time, version) you can show by tapping a hidden corner — useful when you're debugging in person</li>
+  </ul>
+
+  <p>Optional later:</p>
+  <ul>
+    <li>Live weather (OpenWeather or similar — also needs an API key + a tiny proxy)</li>
+    <li>Multiple calendars (work + personal + family), each with its own color</li>
+    <li>Tomorrow preview, swipeable</li>
+    <li>Quiet hours — dim the screen between, say, 11pm and 6am</li>
+  </ul>
+</section>
+
+<footer>
+  WALL CALENDAR · DEPLOY GUIDE · v1
+</footer>
+
+</div>
+</body>
+</html>
