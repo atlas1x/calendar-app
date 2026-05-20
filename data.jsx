@@ -97,6 +97,23 @@ window.CAL_UTIL = (() => {
   return { parseHM, fmt12, fmt12Short, minsOfDay, nextEvent, currentEvent, countdownLabel };
 })();
 
+// ---------- live events hook (fetches /api/events, refreshes every 5 min) ----------
+window.useCalEvents = function useCalEvents() {
+  const [events, setEvents] = React.useState(window.CAL_DATA.events);
+  React.useEffect(() => {
+    const load = () => {
+      fetch('/api/events?t=' + Date.now())
+        .then((r) => r.json())
+        .then((data) => { if (data.events) setEvents(data.events); })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 5 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  return events;
+};
+
 // ---------- live clock hook (1s tick) ----------
 // All variations share this so the "now" indicator stays consistent.
 window.useLiveNow = function useLiveNow(simulated) {

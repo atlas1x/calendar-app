@@ -6,7 +6,7 @@
 // JetBrains Mono for data surfaces (system bar, hour ticks, labels, T-).
 
 const VHybrid = (() => {
-  const { events, allDay, tasks, notes, weather } = window.CAL_DATA;
+  const { allDay, tasks, notes, weather } = window.CAL_DATA;
   const U = window.CAL_UTIL;
 
   const t = {
@@ -76,7 +76,7 @@ const VHybrid = (() => {
   }
 
   // ─── 24h day-density bar (B1) ────────────────────
-  function DayGraph({ now }) {
+  function DayGraph({ now, events }) {
     const nowMin = U.minsOfDay(now);
     return (
       <div style={{ padding: '10px 24px 12px', borderBottom: `1px solid ${t.rule}` }}>
@@ -129,7 +129,7 @@ const VHybrid = (() => {
   const DAY_START = 7 * 60, DAY_END = 22 * 60;
   const mToY = (m) => (m - DAY_START) / 60 * HOUR_PX;
 
-  function Timeline({ now, onTap }) {
+  function Timeline({ now, onTap, events }) {
     const nowMin = U.minsOfDay(now);
     const hours = []; for (let h = 7; h <= 22; h++) hours.push(h);
     const cur = U.currentEvent(events, nowMin);
@@ -203,7 +203,7 @@ const VHybrid = (() => {
     );
   }
 
-  function SidePanel({ now }) {
+  function SidePanel({ now, events }) {
     const nowMin = U.minsOfDay(now);
     const cur = U.currentEvent(events, nowMin);
     const next = U.nextEvent(events, nowMin);
@@ -339,16 +339,17 @@ const VHybrid = (() => {
   // ─── Compose ─────────────────────────────────────
   function Hybrid() {
     const now = window.useLiveNow(window.CAL_DATA.today);
+    const events = window.useCalEvents();
     const [tapped, setTapped] = React.useState(null);
     return (
       <div style={{ width: '100%', height: '100%', background: t.bg, color: t.fg, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <StatusBar now={now} />
         <ClockHeader now={now} />
-        <DayGraph now={now} />
+        <DayGraph now={now} events={events} />
         <AllDayStrip />
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 200px', minHeight: 0 }}>
-          <Timeline now={now} onTap={setTapped} />
-          <SidePanel now={now} />
+          <Timeline now={now} onTap={setTapped} events={events} />
+          <SidePanel now={now} events={events} />
         </div>
         <EventDetail event={tapped} onClose={() => setTapped(null)} />
       </div>
