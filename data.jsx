@@ -97,21 +97,44 @@ window.CAL_UTIL = (() => {
   return { parseHM, fmt12, fmt12Short, minsOfDay, nextEvent, currentEvent, countdownLabel };
 })();
 
-// ---------- live events hook (fetches /api/events, refreshes every 5 min) ----------
-window.useCalEvents = function useCalEvents() {
+// ---------- live calendar hook (events + allDay + lastSync, refreshes every 5 min) ----------
+window.useCalData = function useCalData() {
   const [events, setEvents] = React.useState(window.CAL_DATA.events);
+  const [allDay, setAllDay] = React.useState(window.CAL_DATA.allDay);
+  const [lastSync, setLastSync] = React.useState(null);
   React.useEffect(() => {
     const load = () => {
       fetch('/api/events?t=' + Date.now())
         .then((r) => r.json())
-        .then((data) => { if (data.events) setEvents(data.events); })
+        .then((data) => {
+          if (data.events) setEvents(data.events);
+          if (data.allDay) setAllDay(data.allDay);
+          setLastSync(new Date());
+        })
         .catch(() => {});
     };
     load();
     const id = setInterval(load, 5 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
-  return events;
+  return { events, allDay, lastSync };
+};
+
+// ---------- live weather hook (Open-Meteo, refreshes every 30 min) ----------
+window.useWeather = function useWeather() {
+  const [weather, setWeather] = React.useState(window.CAL_DATA.weather);
+  React.useEffect(() => {
+    const load = () => {
+      fetch('/api/weather?t=' + Date.now())
+        .then((r) => r.json())
+        .then((data) => { if (data.now) setWeather(data); })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  return weather;
 };
 
 // ---------- live clock hook (1s tick) ----------

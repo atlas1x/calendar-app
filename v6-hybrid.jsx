@@ -6,7 +6,7 @@
 // JetBrains Mono for data surfaces (system bar, hour ticks, labels, T-).
 
 const VHybrid = (() => {
-  const { allDay, tasks, notes, weather } = window.CAL_DATA;
+  const { tasks, notes } = window.CAL_DATA;
   const U = window.CAL_UTIL;
 
   const t = {
@@ -28,11 +28,16 @@ const VHybrid = (() => {
   };
 
   // ─── Status bar (B1) ─────────────────────────────
-  function StatusBar({ now }) {
+  function StatusBar({ now, lastSync }) {
     const h = String(now.getHours()).padStart(2,'0');
     const m = String(now.getMinutes()).padStart(2,'0');
     const s = String(now.getSeconds()).padStart(2,'0');
     const iso = now.toISOString().slice(0,10);
+    let syncLabel = 'SYNC --';
+    if (lastSync) {
+      const secs = Math.floor((now - lastSync) / 1000);
+      syncLabel = secs < 60 ? `SYNC ${secs}s` : `SYNC ${Math.floor(secs / 60)}m`;
+    }
     return (
       <div style={{
         display: 'grid', gridTemplateColumns: '1fr auto 1fr',
@@ -44,7 +49,7 @@ const VHybrid = (() => {
           <span style={{ color: t.ok }}>●</span> calendar.live
         </div>
         <div style={{ color: t.fg, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{iso}  {h}:{m}:{s}</div>
-        <div style={{ color: t.mid, textAlign: 'right' }}>SYNC 0:14s</div>
+        <div style={{ color: t.mid, textAlign: 'right' }}>{syncLabel}</div>
       </div>
     );
   }
@@ -58,6 +63,10 @@ const VHybrid = (() => {
     const dnum = now.getDate();
     const month = now.toLocaleDateString('en-US', { month: 'long' });
     const dow = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+    const wkDate = new Date(now); wkDate.setHours(0,0,0,0);
+    wkDate.setDate(wkDate.getDate() + 3 - (wkDate.getDay() + 6) % 7);
+    const wk1 = new Date(wkDate.getFullYear(), 0, 4);
+    const wk = 1 + Math.round(((wkDate - wk1) / 86400000 - 3 + (wk1.getDay() + 6) % 7) / 7);
     return (
       <div style={{ padding: '20px 24px 16px', borderBottom: `1px solid ${t.rule}` }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
@@ -68,7 +77,7 @@ const VHybrid = (() => {
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontFamily: t.sans, fontSize: 18, fontWeight: 600, color: t.fg, letterSpacing: -0.3, lineHeight: 1 }}>{dayName}</div>
             <div style={{ fontFamily: t.sans, fontSize: 13, color: t.dim, marginTop: 4, lineHeight: 1 }}>{month} {dnum}</div>
-            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.faint, marginTop: 6, letterSpacing: 1, fontVariantNumeric: 'tabular-nums' }}>DOY {String(dow).padStart(3,'0')} · WK20</div>
+            <div style={{ fontFamily: t.mono, fontSize: 9.5, color: t.faint, marginTop: 6, letterSpacing: 1, fontVariantNumeric: 'tabular-nums' }}>DOY {String(dow).padStart(3,'0')} · WK{String(wk).padStart(2,'0')}</div>
           </div>
         </div>
       </div>
@@ -109,7 +118,7 @@ const VHybrid = (() => {
   }
 
   // ─── All-day strip (A1) ──────────────────────────
-  function AllDayStrip() {
+  function AllDayStrip({ allDay }) {
     if (!allDay.length) return null;
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 24px', borderBottom: `1px solid ${t.rule}`, background: t.panel2 }}>
@@ -203,7 +212,7 @@ const VHybrid = (() => {
     );
   }
 
-  function SidePanel({ now, events }) {
+  function SidePanel({ now, events, weather }) {
     const nowMin = U.minsOfDay(now);
     const cur = U.currentEvent(events, nowMin);
     const next = U.nextEvent(events, nowMin);
@@ -338,18 +347,19 @@ const VHybrid = (() => {
 
   // ─── Compose ─────────────────────────────────────
   function Hybrid() {
-    const now = window.useLiveNow(window.CAL_DATA.today);
-    const events = window.useCalEvents();
+    const now = window.useLiveNow();
+    const { events, allDay, lastSync } = window.useCalData();
+    const weather = window.useWeather();
     const [tapped, setTapped] = React.useState(null);
     return (
       <div style={{ width: '100%', height: '100%', background: t.bg, color: t.fg, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <StatusBar now={now} />
+        <StatusBar now={now} lastSync={lastSync} />
         <ClockHeader now={now} />
         <DayGraph now={now} events={events} />
-        <AllDayStrip />
+        <AllDayStrip allDay={allDay} />
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 200px', minHeight: 0 }}>
           <Timeline now={now} onTap={setTapped} events={events} />
-          <SidePanel now={now} events={events} />
+          <SidePanel now={now} events={events} weather={weather} />
         </div>
         <EventDetail event={tapped} onClose={() => setTapped(null)} />
       </div>
