@@ -6,7 +6,7 @@
 // JetBrains Mono for data surfaces (system bar, hour ticks, labels, T-).
 
 const VHybrid = (() => {
-  const { tasks, notes } = window.CAL_DATA;
+  const { notes } = window.CAL_DATA;
   const U = window.CAL_UTIL;
 
   const t = {
@@ -212,7 +212,7 @@ const VHybrid = (() => {
     );
   }
 
-  function SidePanel({ now, events, weather }) {
+  function SidePanel({ now, events, weather, tasks }) {
     const nowMin = U.minsOfDay(now);
     const cur = U.currentEvent(events, nowMin);
     const next = U.nextEvent(events, nowMin);
@@ -271,7 +271,7 @@ const VHybrid = (() => {
 
         {/* Weather */}
         <div style={{ padding: '12px 14px', background: t.bg }}>
-          <TileHeader label="WX" right="SF" />
+          <TileHeader label="WX" right="WSNC" />
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <window.WeatherGlyph kind={weather.now.icon} size={20} color={t.fg} />
             <span style={{ fontFamily: t.sans, fontSize: 26, fontWeight: 300, color: t.fg, letterSpacing: -0.7, fontVariantNumeric: 'tabular-nums' }}>{weather.now.temp}°</span>
@@ -350,6 +350,7 @@ const VHybrid = (() => {
     const now = window.useLiveNow();
     const { events, allDay, lastSync } = window.useCalData();
     const weather = window.useWeather();
+    const tasks = window.useTasks();
     const [tapped, setTapped] = React.useState(null);
     return (
       <div style={{ width: '100%', height: '100%', background: t.bg, color: t.fg, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -359,7 +360,7 @@ const VHybrid = (() => {
         <AllDayStrip allDay={allDay} />
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 200px', minHeight: 0 }}>
           <Timeline now={now} onTap={setTapped} events={events} />
-          <SidePanel now={now} events={events} weather={weather} />
+          <SidePanel now={now} events={events} weather={weather} tasks={tasks} />
         </div>
         <EventDetail event={tapped} onClose={() => setTapped(null)} />
       </div>

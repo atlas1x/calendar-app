@@ -10,9 +10,12 @@ module.exports = async function handler(req, res) {
   try {
     const rawEvents = await ical.async.fromURL(icsUrl);
 
+    // Send a wide window (±36h around server UTC "now") so the client can
+    // filter to its own local "today" without missing edge cases caused by
+    // the server running in UTC.
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    const windowStart = new Date(now.getTime() - 36 * 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + 36 * 60 * 60 * 1000);
 
     const events = [];
     const allDay = [];
@@ -25,27 +28,32 @@ module.exports = async function handler(req, res) {
       const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + 60 * 60 * 1000);
       const isAllDay = ev.start.dateOnly === true;
 
+      if (start >= windowEnd || end <= windowStart) continue;
+
       if (isAllDay) {
-        if (start <= todayStart && end > todayStart) {
-          allDay.push({ id: key, title: ev.summary || 'Untitled', color: '#5b8df7' });
-        }
+        // All-day events: send the date components so the client can match
+        // them against its local date.
+        allDay.push({
+          id: key,
+          title: ev.summary || 'Untitled',
+          color: '#5b8df7',
+          startISO: start.toISOString(),
+          endISO: end.toISOString(),
+        });
       } else {
-        if (start < todayEnd && end > todayStart) {
-          const fmt = (d) => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-          events.push({
-            id: key,
-            title: ev.summary || 'Untitled',
-            loc: ev.location || '',
-            start: fmt(start),
-            end: fmt(end),
-            color: '#5b8df7',
-            cat: 'Calendar',
-          });
-        }
+        events.push({
+          id: key,
+          title: ev.summary || 'Untitled',
+          loc: ev.location || '',
+          startISO: start.toISOString(),
+          endISO: end.toISOString(),
+          color: '#5b8df7',
+          cat: 'Calendar',
+        });
       }
     }
 
-    events.sort((a, b) => a.start.localeCompare(b.start));
+    events.sort((a, b) => a.startISO.localeCompare(b.startISO));
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate');
     res.status(200).json({ today: now.toISOString(), events, allDay });

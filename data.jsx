@@ -98,17 +98,51 @@ window.CAL_UTIL = (() => {
 })();
 
 // ---------- live calendar hook (events + allDay + lastSync, refreshes every 5 min) ----------
+// Server returns ISO timestamps; we convert them to local-time HH:MM here
+// and filter to the user's local "today" so we don't trust UTC for the day window.
 window.useCalData = function useCalData() {
   const [events, setEvents] = React.useState(window.CAL_DATA.events);
   const [allDay, setAllDay] = React.useState(window.CAL_DATA.allDay);
   const [lastSync, setLastSync] = React.useState(null);
   React.useEffect(() => {
+    const toLocalHM = (iso) => {
+      const d = new Date(iso);
+      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    };
+    const sameLocalDay = (d, ref) =>
+      d.getFullYear() === ref.getFullYear() &&
+      d.getMonth() === ref.getMonth() &&
+      d.getDate() === ref.getDate();
+
     const load = () => {
       fetch('/api/events?t=' + Date.now())
         .then((r) => r.json())
         .then((data) => {
-          if (data.events) setEvents(data.events);
-          if (data.allDay) setAllDay(data.allDay);
+          const now = new Date();
+          const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+          if (Array.isArray(data.events)) {
+            const todays = data.events
+              .map((e) => {
+                const s = new Date(e.startISO);
+                const en = new Date(e.endISO);
+                return { ...e, _s: s, _e: en, start: toLocalHM(e.startISO), end: toLocalHM(e.endISO) };
+              })
+              // Overlaps the user's local today
+              .filter((e) => e._s < dayEnd && e._e > dayStart)
+              .sort((a, b) => a._s - b._s);
+            setEvents(todays);
+          }
+
+          if (Array.isArray(data.allDay)) {
+            const todays = data.allDay.filter((a) => {
+              const s = new Date(a.startISO);
+              const e = new Date(a.endISO);
+              return s <= dayStart && e > dayStart || sameLocalDay(s, now);
+            });
+            setAllDay(todays);
+          }
           setLastSync(new Date());
         })
         .catch(() => {});
@@ -118,6 +152,23 @@ window.useCalData = function useCalData() {
     return () => clearInterval(id);
   }, []);
   return { events, allDay, lastSync };
+};
+
+// ---------- live tasks hook (Google Tasks via /api/tasks, refreshes every 2 min) ----------
+window.useTasks = function useTasks() {
+  const [tasks, setTasks] = React.useState(window.CAL_DATA.tasks);
+  React.useEffect(() => {
+    const load = () => {
+      fetch('/api/tasks?t=' + Date.now())
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data.tasks)) setTasks(data.tasks); })
+        .catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 2 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  return tasks;
 };
 
 // ---------- live weather hook (Open-Meteo, refreshes every 30 min) ----------

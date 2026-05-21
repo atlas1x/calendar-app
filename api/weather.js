@@ -1,6 +1,7 @@
 module.exports = async function handler(req, res) {
-  const lat = process.env.WEATHER_LAT || '37.7749';
-  const lng = process.env.WEATHER_LNG || '-122.4194';
+  // Defaults: Winston-Salem, NC. Override per-deploy with WEATHER_LAT/WEATHER_LNG.
+  const lat = process.env.WEATHER_LAT || '36.0999';
+  const lng = process.env.WEATHER_LNG || '-80.2442';
 
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
     `&current=temperature_2m,apparent_temperature,weather_code` +

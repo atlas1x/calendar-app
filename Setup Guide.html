@@ -128,6 +128,7 @@
   <div class="toc">
     <a href="#step1"><span class="toc-num">01</span> Put the design online</a>
     <a href="#step2"><span class="toc-num">02</span> Connect your Google Calendar</a>
+    <a href="#step2b"><span class="toc-num">02b</span> Connect Google Tasks</a>
     <a href="#step3"><span class="toc-num">03</span> Prepare the Windows laptop</a>
     <a href="#step4"><span class="toc-num">04</span> Kiosk mode + autoboot</a>
     <a href="#step5"><span class="toc-num">05</span> Mount + go</a>
@@ -225,6 +226,65 @@
 
   <h3>2d · I'll wire the page to this</h3>
   <p>When you've done the above, send me your Vercel URL. I'll swap the sample <code>CAL_DATA.events</code> in the design for a live fetch from <code>/api/events</code>, polled every 5 minutes, with proper handling of all-day events, multi-day events, and a graceful "couldn't reach the calendar" state.</p>
+</section>
+
+<!-- ───────────────────────────────────────────────── -->
+<section class="step" id="step2b">
+  <div class="step-header">
+    <span class="step-num">STEP 02b</span>
+    <h2 class="step-title">Connect Google Tasks</h2>
+    <span class="step-sub">~20 MIN · ONE-TIME</span>
+  </div>
+
+  <p>The <strong>TASKS</strong> tile in the sidebar pulls from <a href="https://tasks.google.com" target="_blank">Google Tasks</a>. Unlike the calendar feed, Tasks has no public iCal-style URL — it requires <strong>OAuth</strong>. Sounds scary, but it's a one-time chore: you mint a long-lived <em>refresh token</em>, paste it into Vercel as an env var, done.</p>
+
+  <h3>2b-1 · Make a Google Cloud project + OAuth client</h3>
+  <ol>
+    <li>Go to <a href="https://console.cloud.google.com/projectcreate" target="_blank">console.cloud.google.com</a> and create a new project (name it anything, e.g. <code>wall-calendar</code>).</li>
+    <li>In that project, open <strong>APIs &amp; Services → Library</strong>, search for <strong>"Tasks API"</strong>, click <strong>Enable</strong>.</li>
+    <li>Open <strong>APIs &amp; Services → OAuth consent screen</strong>. Pick <strong>External</strong>, fill in app name + your email, save. On the <strong>Scopes</strong> step, add <code>https://www.googleapis.com/auth/tasks.readonly</code>. On <strong>Test users</strong>, add your own Gmail address.</li>
+    <li>Open <strong>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</strong>. Application type: <strong>Web application</strong>. Authorized redirect URI: <code>https://developers.google.com/oauthplayground</code>. Save.</li>
+    <li>Copy the <strong>Client ID</strong> and <strong>Client secret</strong> it gives you. Keep them somewhere safe.</li>
+  </ol>
+
+  <h3>2b-2 · Mint a refresh token</h3>
+  <p>Easiest path: Google's own OAuth Playground.</p>
+  <ol>
+    <li>Go to <a href="https://developers.google.com/oauthplayground" target="_blank">developers.google.com/oauthplayground</a>.</li>
+    <li>Click the <strong>⚙ gear</strong> in the top-right. Check <strong>"Use your own OAuth credentials"</strong>. Paste in the Client ID and Client secret from the step above. Close the gear.</li>
+    <li>In the left list, scroll to <strong>Tasks API v1</strong> and check <code>https://www.googleapis.com/auth/tasks.readonly</code>. Click <strong>Authorize APIs</strong>. Sign in with the same Google account whose tasks you want, approve.</li>
+    <li>Back on the playground, click <strong>Exchange authorization code for tokens</strong>.</li>
+    <li>Copy the <strong>Refresh token</strong> (the long string starting with <code>1//</code>). This is the magic value — it lasts indefinitely.</li>
+  </ol>
+
+  <div class="callout warn">
+    <span class="callout-tag">PASSWORD</span>
+    <div>
+      <p>The refresh token is a <strong>password</strong>. Anyone holding it can read your tasks forever. Never commit it to git, never paste it into the HTML. It only goes into Vercel env vars.</p>
+    </div>
+  </div>
+
+  <h3>2b-3 · Add the env vars to Vercel</h3>
+  <p>Vercel project → <strong>Settings → Environment Variables</strong>. Add three:</p>
+  <pre><span class="k">GOOGLE_CLIENT_ID</span>      = <span class="s">your-client-id.apps.googleusercontent.com</span>
+<span class="k">GOOGLE_CLIENT_SECRET</span>  = <span class="s">GOCSPX-...</span>
+<span class="k">GOOGLE_REFRESH_TOKEN</span>  = <span class="s">1//...</span></pre>
+  <p>Optional, only if you want a list other than your primary one:</p>
+  <pre><span class="k">GOOGLE_TASKS_LIST_ID</span>  = <span class="s">@default</span>   <span class="c">// or a specific list ID</span></pre>
+  <p>Redeploy. Hit <code>https://your-site.vercel.app/api/tasks</code> directly in a browser to confirm — you should see JSON with your real tasks.</p>
+
+  <div class="callout ok">
+    <span class="callout-tag">TEST</span>
+    <div>
+      <p>Open <a href="https://tasks.google.com" target="_blank">tasks.google.com</a>, add a couple of dummy tasks with due dates of today, tomorrow, and next week. The wall display will pick them up within ~2 minutes (or refresh the page).</p>
+    </div>
+  </div>
+
+  <h3>2b-4 · Picking a non-default list</h3>
+  <p>If you keep multiple Google Tasks lists (e.g. <em>Personal</em>, <em>House</em>, <em>Work</em>) and want the wall to show a specific one, find its ID:</p>
+  <pre><span class="c">// In OAuth Playground, after authorizing, paste this URL into the request box:</span>
+https://tasks.googleapis.com/tasks/v1/users/@me/lists</pre>
+  <p>Send the request. The response lists every list with its <code>id</code>. Copy the one you want and set it as <code>GOOGLE_TASKS_LIST_ID</code> in Vercel.</p>
 </section>
 
 <!-- ───────────────────────────────────────────────── -->
